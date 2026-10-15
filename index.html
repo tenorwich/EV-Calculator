@@ -378,13 +378,13 @@ html,body{margin:0}
   <header>
     <div class="eyebrow">Household energy model &middot; EV running costs</div>
     <h1>EV Tariff Calculator</h1>
-    <p class="subtitle">Pick an electricity tariff, then see what an electric car costs to charge and run against a petrol or diesel car. The two sections are linked: change a rate and the car figures update straight away.</p>
+    <p class="subtitle">Pick an EV electricity tariff, then see what an electric car costs to charge and run against a petrol or diesel car. The two sections are linked: choose a different tariff and the car figures update straight away.</p>
     <div class="jump"><a class="feed-chip" href="#tariffs" style="text-decoration:none">Tariffs</a><a class="feed-chip" href="#car" style="text-decoration:none">Electric car</a></div>
   </header>
 
   <section class="sec" id="tariffs" aria-labelledby="tariffsTitle">
-    <div class="sec-head"><h2 class="sec-title" id="tariffsTitle">Tariffs</h2><div class="sec-sub">Your import and export rates, or a supplier&rsquo;s EV tariff from Octopus, EDF or E.ON Next.</div></div>
-    <div class="layout">
+    <div class="sec-head"><h2 class="sec-title" id="tariffsTitle">Tariffs</h2><div class="sec-sub">Pick a supplier&rsquo;s EV tariff from Octopus, EDF or E.ON Next and press its button. Its off-peak and peak rates set what the car costs to charge below.</div></div>
+    <div hidden>
       <div class="panel controls">
         <div class="control-group">
           <div class="group-title">Import &amp; export <button class="reset-link" id="resetRates">use defaults</button></div>
@@ -429,26 +429,6 @@ html,body{margin:0}
           </div>
         </div>
       </div>
-      <div class="results">
-        <div class="tiles">
-          <div class="tile">
-            <div class="tile-label">Car charging</div>
-            <div class="tile-value negative" id="tfCar">£0</div>
-            <div class="tile-sub" id="tfCarSub">&nbsp;</div>
-          </div>
-          <div class="tile">
-            <div class="tile-label">Car rate</div>
-            <div class="tile-value" id="tfRate">0p</div>
-            <div class="tile-sub" id="tfRateSub">&nbsp;</div>
-          </div>
-          <div class="tile net">
-            <div class="tile-label">Versus flat rate</div>
-            <div class="tile-value" id="tfSave">£0</div>
-            <div class="tile-sub" id="tfSaveSub">&nbsp;</div>
-          </div>
-        </div>
-        <div class="note">These figures come from the Electric car section below and update as you change the rates. Pick a supplier tariff and press its button to set the off-peak and peak rates in one go.</div>
-      </div>
     </div>
   <div class="panel ev-panel" id="evPanel">
     <div class="ev-head">
@@ -456,19 +436,9 @@ html,body{margin:0}
       <div class="ev-asof">Rates as of Oct 2026 &middot; 0% VAT until 31 Mar 2027</div>
     </div>
     <div class="ev-grid" id="evGrid"></div>
-    <div class="ev-foot">Peak rates and standing charges are national averages and vary by region. Figures come from the third-party comparison site BestChargers.co.uk, not the suppliers directly &mdash; confirm for your postcode and meter before switching. &ldquo;Use in calculator&rdquo; switches to Two-rate and sets the off-peak and peak rates only. Your export rate is left alone, and standing charges aren&rsquo;t part of any figure on this page.</div>
+    <div class="ev-foot">Peak rates and standing charges are national averages and vary by region. Figures come from the third-party comparison site BestChargers.co.uk, not the suppliers directly &mdash; confirm for your postcode and meter before switching. &ldquo;Use in calculator&rdquo; switches to Two-rate and sets the off-peak and peak rates only. Standing charges aren&rsquo;t part of any figure on this page.</div>
   </div>
 
-
-
-  <div class="panel ev-panel" id="expPanel">
-    <div class="ev-head">
-      <div class="ev-title">Solar export tariffs</div>
-      <div class="ev-asof">Checked Oct 2026 &middot; p/kWh paid for exported power</div>
-    </div>
-    <div class="ev-grid" id="expGrid"></div>
-    <div class="ev-foot">Rates come from comparison sites (Heatable, SunSave, EnergyPlus) and the suppliers&rsquo; own SEG and export pages, and they disagree in places, so treat them as a guide and confirm with the supplier. &ldquo;Customers only&rdquo; tariffs need your electricity import from the same supplier. Time-of-use tariffs (Agile, Flux) can&rsquo;t be set as one flat rate, so the button either applies a yearly average or is switched off.</div>
-  </div>
 
 
   </section>
@@ -571,7 +541,7 @@ html,body{margin:0}
 
   <footer>
     <div><strong>Method.</strong> Charging cost is the car&rsquo;s energy (miles &divide; mi/kWh) multiplied by the rate in force: the flat import rate, or in Two-rate mode the off-peak rate for night charging and the peak rate for day charging. Fuel cost is miles &divide; mpg &times; 4.54609 litres per UK gallon &times; the price per litre. If your mi/kWh is measured at the battery rather than at the wall, real charging draws roughly 10% more.</div>
-    <div>Tariff figures come from third-party comparison sites and suppliers&rsquo; own pages, and they disagree in places, so confirm with the supplier for your postcode and meter. Standing charges are not included in any figure. 0% VAT applies to electricity until 31 Mar 2027.</div>
+    <div>Tariff figures come from a third-party comparison site (BestChargers.co.uk) rather than the suppliers directly, and rates vary by region, so confirm with the supplier for your postcode and meter. Standing charges are not included in any figure. 0% VAT applies to electricity until 31 Mar 2027.</div>
   </footer>
 </div>
 
@@ -743,69 +713,6 @@ window.EM = (function(){
 
 <script>
 (function(){
-  const S = [
-    {name:'Octopus Energy', tariffs:[
-      {name:'Outgoing Octopus', rate:12, label:'12.00', note:'Flat. Cut from 15p on 1 March 2026.', cond:'Customers only: needs an Octopus import tariff, smart meter and a renewable system. Battery optional.', term:'Fixed rate'},
-      {name:'Octopus SEG', rate:4.1, label:'4.10', note:'Flat. Unchanged since February 2022.', cond:'Open to anyone: you can import from another supplier. Needs a smart meter and an MCS or Flexi-Orb certified system.', term:'Flat rate'},
-      {name:'Outgoing Agile', rate:9.4, label:'9.4 avg', note:'Changes every half hour: averaged 9.4p over Apr 2025 to Mar 2026, range 0 to 30.41p.', cond:'Customers only: needs an Octopus import tariff and smart meter. A battery is recommended.', term:'Half-hourly variable', avg:true},
-      {name:'Octopus Flux', rate:null, label:'4.99 / 10.11 / 29.32', note:'Off-peak (02:00–05:00) 4.99p, peak (16:00–19:00) 29.32p, 10.11p at other times.', cond:'Needs Flux import as well, plus solar, a battery and a smart meter.', term:'Time of use'},
-      {name:'Intelligent Octopus Flux', rate:null, label:'24.13 / 32.17', note:'Peak (16:00–19:00) 32.17p, 24.13p at other times. Import rates match.', cond:'Needs solar and a battery from an eligible manufacturer, plus a smart meter.', term:'Time of use'}
-    ]},
-    {name:'EDF', tariffs:[
-      {name:'Export Exclusive 12m', rate:18, label:'18.00', note:'Flat, 12 months, no exit fees. For sales after 2 March 2026.', cond:'Solar, battery or both from EDF; battery-only needs an MCS or Flexi-Orb certificate. Optional EDF import tariff.', term:'12-month fix'},
-      {name:'Export 12m', rate:13, label:'13.00', note:'Flat, 12 months, no exit fees.', cond:'Existing EDF electricity customers only. Solar PV, up to 50kW.', term:'12-month fix'},
-      {name:'SEG Export Variable Value', rate:5.6, label:'5.60', note:'Variable rate, no exit fees.', cond:'EDF electricity customers only.', term:'Variable'},
-      {name:'SEG Export Variable', rate:3, label:'3.00', note:'Variable rate, no exit fees.', cond:'Open to anyone, including customers of other suppliers.', term:'Variable'}
-    ]},
-    {name:'E.ON Next', tariffs:[
-      {name:'Next Export Premium', rate:17.5, label:'17.50', note:'Flat, 12 months.', cond:'Solar and/or battery installed through E.ON, up to 15kWp, and your grid electricity from E.ON.', term:'12-month fix'},
-      {name:'Next Export Exclusive', rate:13, label:'13.00', note:'Flat, 12 months. Cut from 16.5p in November 2025.', cond:'Your grid electricity from E.ON, system up to 15kWp. Pays annually unless you ask for quarterly.', term:'12-month fix'},
-      {name:'Next Flex Export (SEG)', rate:6, label:'6.00', note:'Variable rate on a 12-month term. Up from 3p.', cond:'Open to anyone: no need to use E.ON for anything else. MCS or Flexi-Orb certified system.', term:'Variable'}
-    ]}
-  ];
-  const $ = id => document.getElementById(id);
-  const esc = s => String(s).replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-  const grid = $('expGrid');
-  S.forEach((sup, si)=>{
-    const col = document.createElement('div'); col.className = 'ev-col';
-    col.innerHTML = `<div class="ev-supplier">${esc(sup.name)}</div>
-      <select class="ev-select" id="expSel${si}" aria-label="${esc(sup.name)} export tariff">${sup.tariffs.map((t,i)=>`<option value="${i}">${esc(t.name)}</option>`).join('')}</select>
-      <div id="expBody${si}" style="display:flex;flex-direction:column;gap:12px"></div>`;
-    grid.appendChild(col);
-    const sel = $('expSel'+si);
-    if (sup.name==='EDF') sel.value = '1';
-    function render(){
-      const t = sup.tariffs[+sel.value];
-      const canApply = t.rate !== null;
-      $('expBody'+si).innerHTML = `
-        <div class="ev-rates"><div class="ev-rate"><span class="ev-rate-label">Export rate</span><span class="ev-rate-val cheap" style="${t.rate===null?'font-size:1.05rem':''}">${esc(t.label)}<small> p/kWh</small></span></div></div>
-        <dl class="ev-dl">
-          <dt>Type</dt><dd>${esc(t.term)}</dd>
-          <dt>Detail</dt><dd>${esc(t.note)}</dd>
-          <dt>Needs</dt><dd>${esc(t.cond)}</dd>
-        </dl>
-        <button type="button" class="ev-apply" id="expApply${si}" ${canApply?'':'disabled style="opacity:.45;cursor:not-allowed"'}>${canApply ? (t.avg ? 'Use average in calculator' : 'Use as export rate') : 'Time of use: not modelled'}</button>
-        <div class="ev-applied" id="expApplied${si}" aria-live="polite"></div>`;
-      if (canApply) $('expApply'+si).addEventListener('click', ()=>{
-        const inp = $('exportNum'); inp.value = t.rate; inp.dispatchEvent(new Event('input', {bubbles:true}));
-        $('expApplied'+si).textContent = 'Export rate set to ' + t.rate.toFixed(2) + 'p';
-      });
-    }
-    sel.addEventListener('change', render); sel.addEventListener('change', mark); render();
-  });
-  function mark(){
-    const T = EM.get('tariff').get();
-    S.forEach((sup, si)=>{
-      const t = sup.tariffs[+$('expSel'+si).value], n = $('expApplied'+si);
-      if (n) n.textContent = (t.rate!==null && Math.abs(T.exportRate-t.rate)<0.005) ? 'In use in the calculator' : '';
-    });
-  }
-  EM.on(n=>{ if (n==='tariff' || n==='init') mark(); });
-})();
-</script>
-
-<script>
-(function(){
   const $ = id => document.getElementById(id);
   const KEY = 'solarBatteryMeter.car.v3';
   let period = 'year'; let when = 'night'; let include = false;
@@ -951,24 +858,7 @@ window.EM = (function(){
 </script>
 
 <script>
-(function(){
-  const $ = id => document.getElementById(id);
-  const money = v => '£' + Math.round(Math.abs(v)).toLocaleString('en-GB');
-  function refresh(){
-    const T = EM.get('tariff').get(), ca = EM.get('car').results();
-    if (!ca) return;
-    $('tfCar').textContent = '−' + money(ca.charge);
-    $('tfCarSub').textContent = Math.round(ca.kwh).toLocaleString('en-GB') + ' kWh/yr at ' + ca.rate.toFixed(2) + 'p';
-    $('tfRate').textContent = ca.rate.toFixed(2) + 'p';
-    $('tfRateSub').textContent = T.mode === 'tou' ? (ca.when === 'night' ? 'off-peak, for night charging' : 'peak, for day charging') : 'flat import, any time of day';
-    const flat = ca.kwh * T.importRate / 100, d = flat - ca.charge, el = $('tfSave');
-    el.textContent = (d >= 0 ? '' : '−') + money(d);
-    el.className = 'tile-value ' + (d >= 0 ? 'positive' : 'negative');
-    $('tfSaveSub').textContent = T.mode === 'tou' ? (d >= 0 ? 'a year cheaper than ' + T.importRate.toFixed(2) + 'p flat' : 'a year dearer than ' + T.importRate.toFixed(2) + 'p flat') : 'flat rate is the baseline';
-  }
-  EM.on(refresh);
-  EM.changed('init');
-})();
+EM.changed('init');
 </script>
 
 </body>
