@@ -1,0 +1,975 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>EV Tariff Calculator</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@400;500;600;700&family=Public+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600;700&display=swap">
+<style>
+:root{
+  --bg:#EAECE8; --surface:#FFFFFF; --surface-2:#F2F4F0;
+  --ink:#1F2420; --muted:#5B655E; --border:rgba(31,36,32,.13);
+  --accent:#B5622A; --accent-ink:#FFFFFF;
+  --positive:#1F7A5C; --positive-bg:rgba(31,122,92,.10);
+  --negative:#B33F30; --negative-bg:rgba(179,63,48,.10);
+  --track:rgba(31,36,32,.10);
+  --shadow: 0 1px 2px rgba(20,24,18,.06), 0 8px 24px -12px rgba(20,24,18,.18);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#14180F; --surface:#1C2117; --surface-2:#20261B;
+    --ink:#ECEDE9; --muted:#9AA89C; --border:rgba(236,237,233,.14);
+    --accent:#E08A46; --accent-ink:#1A1206;
+    --positive:#4FD1A5; --positive-bg:rgba(79,209,165,.12);
+    --negative:#E5665A; --negative-bg:rgba(229,102,90,.12);
+    --track:rgba(236,237,233,.10);
+    --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 28px -12px rgba(0,0,0,.5);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#14180F; --surface:#1C2117; --surface-2:#20261B;
+  --ink:#ECEDE9; --muted:#9AA89C; --border:rgba(236,237,233,.14);
+  --accent:#E08A46; --accent-ink:#1A1206;
+  --positive:#4FD1A5; --positive-bg:rgba(79,209,165,.12);
+  --negative:#E5665A; --negative-bg:rgba(229,102,90,.12);
+  --track:rgba(236,237,233,.10);
+  --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 28px -12px rgba(0,0,0,.5);
+}
+*{box-sizing:border-box;}
+body{
+  background:var(--bg); color:var(--ink);
+  font-family:'Public Sans',ui-sans-serif,system-ui,sans-serif;
+  padding:0 20px; padding-block:28px 48px;
+  min-height:100vh;
+}
+.wrap{max-width:1040px; margin:0 auto; display:flex; flex-direction:column; gap:22px;}
+
+header{display:flex; flex-direction:column; gap:6px;}
+h1{
+  font-family:'Zilla Slab',ui-serif,Georgia,serif; font-weight:700;
+  font-size:clamp(1.5rem,1.1rem + 1.6vw,2.1rem); margin:0; letter-spacing:-0.01em;
+  text-wrap:balance;
+}
+.subtitle{color:var(--muted); font-size:.96rem; max-width:62ch; line-height:1.5;}
+.eyebrow{
+  font-family:'IBM Plex Mono',ui-monospace,monospace; font-size:.72rem; letter-spacing:.12em;
+  text-transform:uppercase; color:var(--accent); font-weight:600;
+}
+
+.panel{
+  background:var(--surface); border:1px solid var(--border); border-radius:14px;
+  box-shadow:var(--shadow);
+}
+
+.layout{display:grid; grid-template-columns:minmax(280px,360px) 1fr; gap:20px; align-items:start;}
+@media (max-width:760px){ .layout{grid-template-columns:1fr;} }
+
+.controls{padding:22px 22px 24px; display:flex; flex-direction:column; gap:20px;}
+.control-group{display:flex; flex-direction:column; gap:14px;}
+.group-title{
+  font-family:'Zilla Slab',serif; font-weight:600; font-size:1rem;
+  display:flex; align-items:center; justify-content:space-between; gap:8px;
+  padding-bottom:8px; border-bottom:1px solid var(--border);
+}
+.reset-link{
+  font-family:'Public Sans',sans-serif; font-size:.78rem; font-weight:600;
+  color:var(--accent); background:none; border:none; cursor:pointer; padding:2px 0;
+  text-decoration:underline; text-underline-offset:2px;
+}
+.reset-link:hover{opacity:.8;}
+
+.field{display:flex; flex-direction:column; gap:6px;}
+.field-label{
+  display:flex; justify-content:space-between; align-items:baseline; gap:8px;
+  font-size:.86rem; font-weight:600;
+}
+.field-label .hint{font-weight:400; color:var(--muted); font-size:.76rem;}
+.field-readout{
+  font-family:'IBM Plex Mono',monospace; font-variant-numeric:tabular-nums;
+  font-size:.92rem; font-weight:600; color:var(--accent);
+}
+.slider-row{display:flex; align-items:center; gap:10px;}
+input[type="range"]{
+  -webkit-appearance:none; appearance:none; flex:1; height:5px; border-radius:99px;
+  background:var(--track); outline:none; cursor:pointer;
+}
+input[type="range"]::-webkit-slider-thumb{
+  -webkit-appearance:none; width:17px; height:17px; border-radius:50%;
+  background:var(--accent); border:2px solid var(--surface); box-shadow:0 0 0 1px var(--accent);
+  cursor:pointer;
+}
+input[type="range"]::-moz-range-thumb{
+  width:17px; height:17px; border-radius:50%; background:var(--accent);
+  border:2px solid var(--surface); box-shadow:0 0 0 1px var(--accent); cursor:pointer;
+}
+input[type="number"]{
+  width:82px; font-family:'IBM Plex Mono',monospace; font-size:.86rem; font-weight:600;
+  color:var(--ink); background:var(--surface-2); border:1px solid var(--border);
+  border-radius:8px; padding:6px 8px; text-align:right; font-variant-numeric:tabular-nums;
+}
+input[type="number"]:focus, input[type="range"]:focus-visible{
+  outline:2px solid var(--accent); outline-offset:2px;
+}
+.note{font-size:.76rem; color:var(--muted); line-height:1.45;}
+
+.segmented{
+  display:flex; border:1px solid var(--border); border-radius:9px; overflow:hidden;
+  background:var(--surface-2);
+}
+.segmented button{
+  flex:1; border:none; background:none; padding:8px 10px; font-family:'Public Sans',sans-serif;
+  font-size:.8rem; font-weight:600; color:var(--muted); cursor:pointer;
+}
+.segmented button + button{border-left:1px solid var(--border);}
+.segmented button.active{background:var(--accent); color:var(--accent-ink);}
+.segmented button:hover:not(.active){color:var(--ink);}
+
+.tou-fields{display:flex; flex-direction:column; gap:14px;}
+[data-hidden="true"]{display:none !important;}
+
+.tile-breakdown{font-size:.72rem; color:var(--muted); line-height:1.5;}
+
+.configs-panel{padding:20px 22px 22px; display:flex; flex-direction:column; gap:14px;}
+.configs-headrow{display:flex; justify-content:space-between; align-items:baseline; gap:12px; flex-wrap:wrap;}
+.configs-title{font-family:'Zilla Slab',serif; font-weight:600; font-size:1rem;}
+.configs-count{font-family:'IBM Plex Mono',monospace; font-size:.76rem; color:var(--muted);}
+.configs-scroll{overflow-x:auto; padding-bottom:2px;}
+.configs-grid{display:grid; gap:0; min-width:max-content;}
+.cg-cell{
+  padding:10px 14px; border-bottom:1px solid var(--border); display:flex; align-items:center;
+  min-width:132px;
+}
+.cg-cell.label{
+  font-size:.78rem; font-weight:600; color:var(--muted); min-width:120px;
+  font-family:'Public Sans',sans-serif;
+}
+.cg-cell.head{
+  border-bottom:2px solid var(--border); padding-top:12px; padding-bottom:12px;
+}
+.cg-name-input{
+  width:100%; font-family:'Zilla Slab',serif; font-weight:600; font-size:.92rem;
+  color:var(--ink); background:none; border:none; border-bottom:1px dashed transparent; padding:2px 0;
+}
+.cg-name-input:hover, .cg-name-input:focus{border-bottom-color:var(--muted); outline:none;}
+.cg-value{
+  font-family:'IBM Plex Mono',monospace; font-size:.86rem; font-variant-numeric:tabular-nums;
+  color:var(--ink); line-height:1.35;
+}
+.cg-value.positive{color:var(--positive); font-weight:600;}
+.cg-value.negative{color:var(--negative); font-weight:600;}
+.cg-summary{font-size:.78rem; color:var(--muted); line-height:1.4;}
+.cg-actions{display:flex; gap:8px;}
+.cg-btn{
+  font-family:'Public Sans',sans-serif; font-size:.74rem; font-weight:600; cursor:pointer;
+  border-radius:7px; padding:5px 9px; border:1px solid var(--border); background:var(--surface-2); color:var(--ink);
+}
+.cg-btn:hover{border-color:var(--accent); color:var(--accent);}
+.cg-btn.danger:hover{border-color:var(--negative); color:var(--negative);}
+.cg-add-cell{
+  grid-row:1/-1; display:flex; align-items:center; justify-content:center; min-width:56px;
+}
+.cg-add-btn{
+  width:38px; height:38px; border-radius:50%; border:1.5px dashed var(--accent); background:none;
+  color:var(--accent); font-size:1.3rem; line-height:1; cursor:pointer; display:flex; align-items:center; justify-content:center;
+}
+.cg-add-btn:hover{background:var(--accent); color:var(--accent-ink); border-style:solid;}
+.configs-empty{
+  padding:18px 4px; display:flex; align-items:center; gap:14px; color:var(--muted); font-size:.86rem;
+}
+
+.results{display:flex; flex-direction:column; gap:16px;}
+.tiles{display:grid; grid-template-columns:repeat(3,1fr); gap:14px;}
+@media (max-width:640px){ .tiles{grid-template-columns:1fr;} }
+.tile{
+  padding:18px 18px 16px; border-radius:14px; border:1px solid var(--border);
+  background:var(--surface); box-shadow:var(--shadow);
+  display:flex; flex-direction:column; gap:6px; min-width:0;
+}
+.tile.net{background:var(--surface-2);}
+.tile-label{
+  font-family:'IBM Plex Mono',monospace; font-size:.72rem; letter-spacing:.08em;
+  text-transform:uppercase; color:var(--muted); font-weight:600;
+}
+.tile-value{
+  font-family:'IBM Plex Mono',monospace; font-weight:700; font-variant-numeric:tabular-nums;
+  font-size:clamp(1.5rem,1.1rem + 1.4vw,1.9rem); line-height:1.1; white-space:nowrap;
+  overflow:hidden; text-overflow:ellipsis;
+}
+.tile-value.positive{color:var(--positive);}
+.tile-value.negative{color:var(--negative);}
+.tile-sub{font-size:.78rem; color:var(--muted);}
+
+.gauge-panel{padding:20px 22px 18px; display:flex; flex-direction:column; gap:10px;}
+.gauge-title{
+  font-family:'Zilla Slab',serif; font-weight:600; font-size:.94rem; color:var(--muted);
+}
+.gauge-svg{width:100%; height:auto; display:block;}
+.gauge-caption{display:flex; justify-content:space-between; font-size:.76rem; color:var(--muted); font-family:'IBM Plex Mono',monospace;}
+
+.compare{
+  display:flex; flex-wrap:wrap; gap:10px 24px; padding:16px 20px; border-radius:12px;
+  background:var(--surface-2); border:1px solid var(--border); font-size:.84rem;
+}
+.compare-item{display:flex; gap:6px; align-items:baseline; font-family:'IBM Plex Mono',monospace; font-variant-numeric:tabular-nums;}
+.compare-label{font-family:'Public Sans',sans-serif; color:var(--muted);}
+
+footer{
+  border-top:1px solid var(--border); padding-top:16px; display:flex; flex-direction:column; gap:6px;
+  font-size:.78rem; color:var(--muted); line-height:1.55;
+}
+footer strong{color:var(--ink); font-weight:600;}
+
+.ev-panel{padding:20px 22px 22px; display:flex; flex-direction:column; gap:16px;}
+.ev-head{display:flex; justify-content:space-between; align-items:baseline; gap:6px 16px; flex-wrap:wrap;}
+.ev-title{font-family:'Zilla Slab',serif; font-weight:600; font-size:1rem;}
+.ev-asof{font-family:'IBM Plex Mono',monospace; font-size:.74rem; color:var(--muted);}
+.ev-grid{display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:16px;}
+@media (max-width:900px){ .ev-grid{grid-template-columns:1fr;} }
+.ev-col{
+  display:flex; flex-direction:column; gap:12px; padding:16px; border-radius:12px;
+  background:var(--surface-2); border:1px solid var(--border); min-width:0;
+}
+.ev-supplier{font-family:'Zilla Slab',serif; font-weight:700; font-size:1.05rem;}
+.ev-select{
+  width:100%; font-family:'Public Sans',sans-serif; font-size:.86rem; font-weight:600; color:var(--ink);
+  background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:8px 10px; cursor:pointer;
+}
+.ev-select:focus-visible{outline:2px solid var(--accent); outline-offset:2px;}
+.ev-rates{display:flex; gap:18px; flex-wrap:wrap;}
+.ev-rate{display:flex; flex-direction:column; gap:2px;}
+.ev-rate-label{font-family:'IBM Plex Mono',monospace; font-size:.68rem; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); font-weight:600;}
+.ev-rate-val{font-family:'IBM Plex Mono',monospace; font-variant-numeric:tabular-nums; font-weight:700; font-size:1.35rem; line-height:1.1;}
+.ev-rate-val.cheap{color:var(--positive);}
+.ev-rate-val small{font-size:.72rem; font-weight:600; color:var(--muted);}
+.ev-strip{position:relative; height:10px; border-radius:99px; background:var(--track); overflow:hidden;}
+.ev-seg{position:absolute; top:0; bottom:0; background:var(--positive);}
+.ev-strip-caption{display:flex; justify-content:space-between; font-family:'IBM Plex Mono',monospace; font-size:.66rem; color:var(--muted); margin-top:-6px;}
+.ev-dl{display:grid; grid-template-columns:auto 1fr; gap:6px 12px; margin:0; font-size:.8rem; line-height:1.4;}
+.ev-dl dt{color:var(--muted); font-weight:600;}
+.ev-dl dd{margin:0; min-width:0; overflow-wrap:anywhere;}
+.ev-apply{
+  align-self:flex-start; font-family:'Public Sans',sans-serif; font-size:.78rem; font-weight:600; cursor:pointer;
+  border-radius:8px; padding:7px 12px; border:1px solid var(--accent); background:var(--accent); color:var(--accent-ink);
+}
+.ev-apply:hover{opacity:.9;}
+.ev-apply:focus-visible{outline:2px solid var(--accent); outline-offset:2px;}
+.ev-applied{font-size:.74rem; color:var(--positive); font-weight:600; min-height:1em;}
+.ev-foot{font-size:.76rem; color:var(--muted); line-height:1.55;}
+
+.car-panel{padding:20px 22px 22px; display:flex; flex-direction:column; gap:16px;}
+.car-body{display:grid; grid-template-columns:minmax(260px,340px) 1fr; gap:22px; align-items:start;}
+@media (max-width:760px){ .car-body{grid-template-columns:1fr;} }
+.car-inputs{display:flex; flex-direction:column; gap:16px;}
+.car-row{display:flex; align-items:center; gap:10px;}
+.car-row input[type="number"]{width:100px;}
+.car-unit{font-size:.8rem; color:var(--muted); font-weight:600;}
+.car-seg{max-width:220px;}
+.car-include{display:flex; align-items:center; gap:9px; font-size:.86rem; font-weight:600; cursor:pointer;}
+.car-include input{width:17px; height:17px; accent-color:var(--accent); cursor:pointer;}
+.car-include input:focus-visible{outline:2px solid var(--accent); outline-offset:2px;}
+.car-tiles{display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px;}
+@media (max-width:640px){ .car-tiles{grid-template-columns:1fr;} }
+.car-tile{padding:14px 16px; border-radius:12px; border:1px solid var(--border); background:var(--surface-2); display:flex; flex-direction:column; gap:4px; min-width:0;}
+.car-tile .tile-value{font-size:clamp(1.3rem,1rem + 1vw,1.6rem);}
+.car-cmp{width:100%; border-collapse:collapse; font-size:.82rem; margin-top:12px;}
+.car-cmp td{padding:7px 4px; border-bottom:1px solid var(--border);}
+.car-cmp td:last-child{text-align:right; font-family:'IBM Plex Mono',monospace; font-variant-numeric:tabular-nums; font-weight:600;}
+.car-cmp td:first-child{color:var(--muted);}
+.car-cmp-head{font-family:'Zilla Slab',serif; font-weight:600; font-size:.95rem; padding-top:6px; border-top:1px solid var(--border);}
+
+.tabs{display:flex; gap:4px; border-bottom:1px solid var(--border);}
+.tab-btn{
+  font-family:'Public Sans',sans-serif; font-size:.9rem; font-weight:600; color:var(--muted); background:none; border:none;
+  padding:10px 16px; cursor:pointer; border-bottom:3px solid transparent; margin-bottom:-1px;
+}
+.tab-btn:hover{color:var(--ink);}
+.tab-btn[aria-selected="true"]{color:var(--accent); border-bottom-color:var(--accent);}
+.tab-btn:focus-visible{outline:2px solid var(--accent); outline-offset:-2px; border-radius:6px;}
+.tab-pane{display:flex; flex-direction:column; gap:22px;}
+.tab-pane[hidden]{display:none !important;}
+.use-body{display:grid; grid-template-columns:minmax(260px,340px) minmax(0,1fr); gap:20px; align-items:start;}
+.use-body > *{min-width:0;}
+@media (max-width:760px){ .use-body{grid-template-columns:minmax(0,1fr);} }
+.use-panel{padding:22px; display:flex; flex-direction:column; gap:18px;}
+.use-table-wrap{overflow-x:auto;}
+.use-table{width:100%; border-collapse:collapse; font-size:.84rem; min-width:520px;}
+.use-table th{
+  text-align:right; font-family:'IBM Plex Mono',monospace; font-size:.68rem; letter-spacing:.08em; text-transform:uppercase;
+  color:var(--muted); font-weight:600; padding:8px 8px; border-bottom:2px solid var(--border);
+}
+.use-table th:first-child{text-align:left;}
+.use-table td{padding:9px 8px; border-bottom:1px solid var(--border); text-align:right; font-family:'IBM Plex Mono',monospace; font-variant-numeric:tabular-nums;}
+.use-table td:first-child{text-align:left; font-family:'Public Sans',sans-serif; font-weight:600;}
+.use-table td:first-child small{display:block; font-weight:400; color:var(--muted); font-size:.74rem;}
+.use-table tr.best td{background:var(--positive-bg);}
+.use-table td.total{font-weight:700;}
+.use-badge{display:inline-block; font-family:'IBM Plex Mono',monospace; font-size:.64rem; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--positive); margin-left:6px;}
+
+
+.use-fields{display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:18px 24px;}
+.use-fields > *{min-width:0;}
+
+.tabs{overflow-x:auto; scrollbar-width:thin;}
+.tab-btn{white-space:nowrap;}
+.feed-row{display:flex; flex-wrap:wrap; align-items:center; gap:6px 8px; font-size:.78rem; color:var(--muted);}
+.feed-chip{
+  font-family:'IBM Plex Mono',monospace; font-size:.7rem; font-weight:600; letter-spacing:.02em;
+  padding:4px 9px; border-radius:99px; border:1px solid var(--border); background:var(--surface-2); color:var(--ink);
+  cursor:pointer;
+}
+.feed-chip:hover{border-color:var(--accent); color:var(--accent);}
+.feed-chip:focus-visible{outline:2px solid var(--accent); outline-offset:2px;}
+.feed-chip.static{cursor:default;}
+.feed-chip.static:hover{border-color:var(--border); color:var(--ink);}
+.feed-arrow{color:var(--accent); font-weight:700;}
+.in-use{
+  display:flex; flex-direction:column; gap:6px; padding:14px 16px; border-radius:12px;
+  background:var(--surface-2); border:1px solid var(--border); font-size:.84rem; line-height:1.45;
+}
+.in-use-row{display:flex; gap:8px; align-items:baseline; flex-wrap:wrap;}
+.in-use-label{font-family:'IBM Plex Mono',monospace; font-size:.68rem; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); font-weight:600; min-width:96px;}
+.in-use-val{font-weight:600; min-width:0; overflow-wrap:anywhere;}
+.link-btn{
+  font-family:'Public Sans',sans-serif; font-size:.78rem; font-weight:600; color:var(--accent); background:none; border:none; cursor:pointer;
+  padding:0; text-decoration:underline; text-underline-offset:2px;
+}
+.link-btn:hover{opacity:.8;}
+.link-btn:focus-visible{outline:2px solid var(--accent); outline-offset:2px; border-radius:4px;}
+.src-row{display:flex; flex-wrap:wrap; gap:12px 20px; align-items:center; justify-content:space-between;}
+.src-row .segmented{min-width:min(100%,320px);}
+.m-bars{display:flex; flex-direction:column; gap:10px;}
+.m-bar{display:grid; grid-template-columns:minmax(110px,190px) minmax(0,1fr) auto; gap:12px; align-items:center; font-size:.84rem;}
+.m-bar-track{height:12px; border-radius:99px; background:var(--track); overflow:hidden;}
+.m-bar-fill{height:100%; border-radius:99px;}
+.m-bar-fill.pos{background:var(--positive);}
+.m-bar-fill.neg{background:var(--negative);}
+.m-bar-val{font-family:'IBM Plex Mono',monospace; font-variant-numeric:tabular-nums; font-weight:600; min-width:84px; text-align:right;}
+.m-bar-val.pos{color:var(--positive);}
+.m-bar-val.neg{color:var(--negative);}
+.m-bar.total{padding-top:10px; border-top:1px solid var(--border); font-weight:700;}
+@media (max-width:520px){ .m-bar{grid-template-columns:minmax(0,1fr) auto; } .m-bar-track{grid-column:1 / -1; order:3;} }
+.m-modules{display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,290px),1fr)); gap:16px; align-items:start;}
+.m-mod{padding:18px 18px 20px; display:flex; flex-direction:column; gap:14px; min-width:0;}
+.m-mod-head{display:flex; justify-content:space-between; align-items:baseline; gap:8px;}
+.m-mod-title{font-family:'Zilla Slab',serif; font-weight:700; font-size:1.08rem;}
+.m-mod-out{font-size:.8rem; color:var(--muted); line-height:1.5; padding-top:10px; border-top:1px solid var(--border);}
+.m-mod-out strong{color:var(--ink); font-weight:600;}
+.m-mod .field-label span:first-child{min-width:0;}
+.m-mod input[type="number"]{width:78px;}
+.m-mod .slider-row input[type="range"]{min-width:0;}
+.m-sub{font-family:'Zilla Slab',serif; font-weight:600; font-size:.9rem; padding-top:4px; border-top:1px solid var(--border);}
+.m-hint{font-size:.74rem; color:var(--muted); line-height:1.45;}
+.use-body-note{font-size:.8rem; color:var(--muted); line-height:1.5;}
+.compare-item{flex-wrap:wrap;}
+.sec{display:flex; flex-direction:column; gap:22px;}
+.sec-head{display:flex; flex-direction:column; gap:4px; padding-top:6px;}
+.sec-title{font-family:'Zilla Slab',serif; font-weight:700; font-size:1.5rem; margin:0; letter-spacing:-0.01em;}
+.sec-sub{color:var(--muted); font-size:.9rem; max-width:62ch; line-height:1.5;}
+.jump{display:flex; gap:8px; flex-wrap:wrap;}
+@media (prefers-reduced-motion: reduce){ *{transition:none !important;} }
+html,body{margin:0}
+[hidden]{display:none !important}
+</style>
+
+
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Household energy model &middot; EV running costs</div>
+    <h1>EV Tariff Calculator</h1>
+    <p class="subtitle">Pick an electricity tariff, then see what an electric car costs to charge and run against a petrol or diesel car. The two sections are linked: change a rate and the car figures update straight away.</p>
+    <div class="jump"><a class="feed-chip" href="#tariffs" style="text-decoration:none">Tariffs</a><a class="feed-chip" href="#car" style="text-decoration:none">Electric car</a></div>
+  </header>
+
+  <section class="sec" id="tariffs" aria-labelledby="tariffsTitle">
+    <div class="sec-head"><h2 class="sec-title" id="tariffsTitle">Tariffs</h2><div class="sec-sub">Your import and export rates, or a supplier&rsquo;s EV tariff from Octopus, EDF or E.ON Next.</div></div>
+    <div class="layout">
+      <div class="panel controls">
+        <div class="control-group">
+          <div class="group-title">Import &amp; export <button class="reset-link" id="resetRates">use defaults</button></div>
+          <div class="segmented" id="tariffModeSeg">
+            <button type="button" data-mode="flat">Flat rate</button>
+            <button type="button" data-mode="tou" class="active">Two-rate</button>
+          </div>
+          <div class="tou-fields" id="flatFields" data-hidden="true">
+            <div class="field">
+              <div class="field-label"><span>Import rate</span><span class="field-readout"><span id="importVal">0.0</span> p/kWh</span></div>
+              <div class="slider-row">
+                <input type="range" id="importSlider" min="5" max="50" step="0.01" />
+                <input type="number" id="importNum" min="0" max="100" step="0.01" />
+              </div>
+            </div>
+            <div class="note">Suggested: most recent flat-rate figure on file, 23.31p/kWh.</div>
+          </div>
+          <div class="tou-fields" id="touFields">
+            <div class="field">
+              <div class="field-label"><span>Off-peak rate <span class="hint">(23:30&ndash;05:30)</span></span><span class="field-readout"><span id="offpeakVal">0.0</span> p/kWh</span></div>
+              <div class="slider-row">
+                <input type="range" id="offpeakSlider" min="1" max="20" step="0.01" />
+                <input type="number" id="offpeakNum" min="0" max="40" step="0.01" />
+              </div>
+            </div>
+            <div class="field">
+              <div class="field-label"><span>Peak rate</span><span class="field-readout"><span id="peakVal">0.0</span> p/kWh</span></div>
+              <div class="slider-row">
+                <input type="range" id="peakSlider" min="10" max="60" step="0.01" />
+                <input type="number" id="peakNum" min="0" max="100" step="0.01" />
+              </div>
+            </div>
+            <div class="note">Defaults: EDF GoElectric (18 months), 6.66p off-peak / 31.99p peak. The tariff&rsquo;s own cheap window is 23:00&ndash;06:00. Pick any other supplier tariff below to replace these. The car is costed on the off-peak rate when it charges at night and the peak rate when it charges by day.</div>
+          </div>
+          <div class="field">
+            <div class="field-label"><span>Export rate</span><span class="field-readout"><span id="exportVal">0.0</span> p/kWh</span></div>
+            <div class="slider-row">
+              <input type="range" id="exportSlider" min="0" max="30" step="0.01" />
+              <input type="number" id="exportNum" min="0" max="60" step="0.01" />
+            </div>
+            <div class="note">Default: EDF Export 12m, 13.0p/kWh. Export only matters if you have solar, so it does not change the car figures on this page.</div>
+          </div>
+        </div>
+      </div>
+      <div class="results">
+        <div class="tiles">
+          <div class="tile">
+            <div class="tile-label">Car charging</div>
+            <div class="tile-value negative" id="tfCar">£0</div>
+            <div class="tile-sub" id="tfCarSub">&nbsp;</div>
+          </div>
+          <div class="tile">
+            <div class="tile-label">Car rate</div>
+            <div class="tile-value" id="tfRate">0p</div>
+            <div class="tile-sub" id="tfRateSub">&nbsp;</div>
+          </div>
+          <div class="tile net">
+            <div class="tile-label">Versus flat rate</div>
+            <div class="tile-value" id="tfSave">£0</div>
+            <div class="tile-sub" id="tfSaveSub">&nbsp;</div>
+          </div>
+        </div>
+        <div class="note">These figures come from the Electric car section below and update as you change the rates. Pick a supplier tariff and press its button to set the off-peak and peak rates in one go.</div>
+      </div>
+    </div>
+  <div class="panel ev-panel" id="evPanel">
+    <div class="ev-head">
+      <div class="ev-title">EV tariffs</div>
+      <div class="ev-asof">Rates as of Oct 2026 &middot; 0% VAT until 31 Mar 2027</div>
+    </div>
+    <div class="ev-grid" id="evGrid"></div>
+    <div class="ev-foot">Peak rates and standing charges are national averages and vary by region. Figures come from the third-party comparison site BestChargers.co.uk, not the suppliers directly &mdash; confirm for your postcode and meter before switching. &ldquo;Use in calculator&rdquo; switches to Two-rate and sets the off-peak and peak rates only. Your export rate is left alone, and standing charges aren&rsquo;t part of any figure on this page.</div>
+  </div>
+
+
+
+  <div class="panel ev-panel" id="expPanel">
+    <div class="ev-head">
+      <div class="ev-title">Solar export tariffs</div>
+      <div class="ev-asof">Checked Oct 2026 &middot; p/kWh paid for exported power</div>
+    </div>
+    <div class="ev-grid" id="expGrid"></div>
+    <div class="ev-foot">Rates come from comparison sites (Heatable, SunSave, EnergyPlus) and the suppliers&rsquo; own SEG and export pages, and they disagree in places, so treat them as a guide and confirm with the supplier. &ldquo;Customers only&rdquo; tariffs need your electricity import from the same supplier. Time-of-use tariffs (Agile, Flux) can&rsquo;t be set as one flat rate, so the button either applies a yearly average or is switched off.</div>
+  </div>
+
+
+  </section>
+
+  <section class="sec" id="car" aria-labelledby="carTitle">
+    <div class="sec-head"><h2 class="sec-title" id="carTitle">Electric car</h2><div class="sec-sub">Efficiency, mileage and when you charge, with the UK pay-per-mile tax and a fuel-car comparison.</div></div>
+  <div class="panel car-panel" id="carPanel">
+    <div class="ev-head">
+      <div class="ev-title">Electric car</div>
+      <div class="ev-asof" id="carAsof">&nbsp;</div>
+    </div>
+    <div class="feed-row"><span>Charging is costed at the rate set in the Tariffs section above.</span><a class="feed-chip" href="#tariffs" style="text-decoration:none">Go to Tariffs</a></div>
+    <div class="car-body">
+      <div class="car-inputs">
+        <div class="field">
+          <div class="field-label"><span>Driver preset</span></div>
+          <div class="segmented car-seg" id="carDriverSeg">
+            <button type="button" data-driver="1">Driver 1</button>
+            <button type="button" data-driver="2">Driver 2</button>
+          </div>
+          <div class="note" id="carDriverNote">&nbsp;</div>
+        </div>
+        <div class="field">
+          <div class="field-label"><span>Car efficiency</span><span class="field-readout"><span id="carMpkVal">3.5</span> mi/kWh</span></div>
+          <div class="slider-row">
+            <input type="range" id="carMpkSlider" min="1" max="6" step="0.1" />
+            <input type="number" id="carMpkNum" min="0.5" max="10" step="0.1" />
+          </div>
+        </div>
+        <div class="field">
+          <div class="field-label"><span>Miles driven</span><span class="field-readout"><span id="carMilesVal">0</span> mi / <span id="carPeriodLbl">year</span></span></div>
+          <div class="slider-row">
+            <input type="range" id="carMilesSlider" min="0" max="30000" step="100" />
+            <input type="number" id="carMilesNum" min="0" max="200000" step="100" />
+          </div>
+          <div class="segmented car-seg" id="carPeriodSeg">
+            <button type="button" data-period="week">Per week</button>
+            <button type="button" data-period="year" class="active">Per year</button>
+          </div>
+        </div>
+        <div class="field">
+          <div class="field-label"><span>Charge at</span></div>
+          <div class="segmented car-seg" id="carWhenSeg">
+            <button type="button" data-when="night" class="active">Night rate</button>
+            <button type="button" data-when="day">Day rate</button>
+          </div>
+          <div class="note" id="carWhenNote">&nbsp;</div>
+        </div>
+        <div class="field">
+          <div class="field-label"><span>EV mileage tax</span><span class="field-readout"><span id="carTaxVal">3.0</span> p/mile</span></div>
+          <div class="slider-row">
+            <input type="range" id="carTaxSlider" min="0" max="10" step="0.1" />
+            <input type="number" id="carTaxNum" min="0" max="20" step="0.1" />
+          </div>
+          <label class="car-include"><input type="checkbox" id="carTaxOn" checked /> <span>Include in the electric car cost</span></label>
+          <div class="note">UK pay-per-mile eVED: 3p a mile for electric cars (1.5p for plug-in hybrids), starting 1 April 2028 and rising with inflation from 2029. It is not payable today.</div>
+        </div>
+        <div class="car-cmp-head">Compare with a fuel car</div>
+        <div class="field">
+          <div class="field-label"><span>Fuel car economy</span><span class="field-readout"><span id="carMpgVal">40</span> mpg</span></div>
+          <div class="slider-row">
+            <input type="range" id="carMpgSlider" min="15" max="80" step="1" />
+            <input type="number" id="carMpgNum" min="5" max="150" step="1" />
+          </div>
+        </div>
+        <div class="field">
+          <div class="field-label"><span>Fuel price</span><span class="field-readout">£<span id="carFuelVal">1.745</span> / litre</span></div>
+          <div class="slider-row">
+            <input type="range" id="carFuelSlider" min="1" max="2.5" step="0.005" />
+            <input type="number" id="carFuelNum" min="0.5" max="4" step="0.001" />
+          </div>
+          <div class="segmented car-seg" id="carFuelSeg">
+            <button type="button" data-fuel="petrol" class="active">Petrol</button>
+            <button type="button" data-fuel="diesel">Diesel</button>
+          </div>
+          <div class="note">Defaults: petrol £1.759 a litre at 45 mpg, diesel £1.999 a litre at 60 mpg. Switching fuel resets both. Economy is UK miles per gallon.</div>
+        </div>
+        <div hidden><input type="checkbox" id="carInclude" /><div id="carIncludeNote"></div></div>
+        <div class="note">Use the mi/kWh from the car&rsquo;s trip computer or the manufacturer&rsquo;s figure. If it is measured at the battery rather than at the wall, real charging draws roughly 10% more.</div>
+      </div>
+      <div>
+        <div class="car-tiles">
+          <div class="car-tile"><div class="tile-label">Energy per year</div><div class="tile-value" id="carKwhYr">0</div><div class="tile-sub" id="carKwhSub">&nbsp;</div></div>
+          <div class="car-tile"><div class="tile-label">Running cost</div><div class="tile-value negative" id="carCost">£0</div><div class="tile-sub" id="carCostSub">&nbsp;</div></div>
+          <div class="car-tile"><div class="tile-label">Cost per mile</div><div class="tile-value" id="carPerMile">0p</div><div class="tile-sub" id="carPerMileSub">&nbsp;</div></div>
+        </div>
+        <table class="car-cmp" aria-label="Charging cost by rate">
+          <tbody id="carCmpBody"></tbody>
+        </table>
+        <div class="car-tiles" style="margin-top:16px">
+          <div class="car-tile"><div class="tile-label">Fuel car cost</div><div class="tile-value negative" id="carFuelCost">£0</div><div class="tile-sub" id="carFuelSub">&nbsp;</div></div>
+          <div class="car-tile"><div class="tile-label">Fuel car per mile</div><div class="tile-value" id="carFuelPm">0p</div><div class="tile-sub" id="carFuelPmSub">&nbsp;</div></div>
+          <div class="car-tile"><div class="tile-label">Electric saves</div><div class="tile-value positive" id="carSave">£0</div><div class="tile-sub" id="carSaveSub">&nbsp;</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  </section>
+
+  <footer>
+    <div><strong>Method.</strong> Charging cost is the car&rsquo;s energy (miles &divide; mi/kWh) multiplied by the rate in force: the flat import rate, or in Two-rate mode the off-peak rate for night charging and the peak rate for day charging. Fuel cost is miles &divide; mpg &times; 4.54609 litres per UK gallon &times; the price per litre. If your mi/kWh is measured at the battery rather than at the wall, real charging draws roughly 10% more.</div>
+    <div>Tariff figures come from third-party comparison sites and suppliers&rsquo; own pages, and they disagree in places, so confirm with the supplier for your postcode and meter. Standing charges are not included in any figure. 0% VAT applies to electricity until 31 Mar 2027.</div>
+  </footer>
+</div>
+
+<script>
+window.EM = (function(){
+  const mods = {}, subs = [];
+  return {
+    register(name, api){ mods[name] = api; },
+    get(name){ return mods[name]; },
+    on(fn){ subs.push(fn); },
+    changed(name){ subs.slice().forEach(fn => { try { fn(name); } catch(e){ console.error(e); } }); }
+  };
+})();
+</script>
+
+<script>
+(function(){
+  const el = id => document.getElementById(id);
+  const SUG = {importRate:23.31, exportRate:13.0, offpeak:6.66, peak:31.99};  // defaults: EDF GoElectric (18 months) + EDF Export 12m
+  const KEY = 'solarBatteryMeter.tariff.v2';
+  const F = v => v.toFixed(2);
+  const PAIRS = {
+    importRate:['importSlider','importNum','importVal'],
+    exportRate:['exportSlider','exportNum','exportVal'],
+    offpeak:['offpeakSlider','offpeakNum','offpeakVal'],
+    peak:['peakSlider','peakNum','peakVal']
+  };
+  let mode = 'tou';
+  function setPair(key, v){
+    const [s,n,l] = PAIRS[key]; el(s).value = v; el(n).value = v; el(l).textContent = F(+v);
+  }
+  function setModeUI(){
+    document.querySelectorAll('#tariffModeSeg button').forEach(b => b.classList.toggle('active', b.dataset.mode === mode));
+    el('flatFields').dataset.hidden = mode === 'tou' ? 'true' : 'false';
+    el('touFields').dataset.hidden = mode === 'tou' ? 'false' : 'true';
+  }
+  function get(){
+    const r = {mode};
+    Object.keys(PAIRS).forEach(k => { r[k] = parseFloat(el(PAIRS[k][1]).value) || 0; });
+    return r;
+  }
+  function save(){
+    try { localStorage.setItem(KEY, JSON.stringify(get())); } catch(e){}
+  }
+  function commit(){ save(); EM.changed('tariff'); }
+
+  Object.keys(PAIRS).forEach(k => {
+    const [sid,nid,lid] = PAIRS[k], s = el(sid), n = el(nid), l = el(lid);
+    s.addEventListener('input', () => { n.value = s.value; l.textContent = F(parseFloat(s.value)); commit(); });
+    n.addEventListener('input', () => {
+      let v = parseFloat(n.value); if (isNaN(v)) return;
+      const min = parseFloat(s.min), max = parseFloat(s.max);
+      if (v < min) v = min; if (v > max) v = max;
+      s.value = v; l.textContent = F(v); commit();
+    });
+  });
+  el('resetRates').addEventListener('click', () => { Object.keys(SUG).forEach(k => setPair(k, SUG[k])); commit(); });
+  document.querySelectorAll('#tariffModeSeg button').forEach(b => b.addEventListener('click', () => {
+    mode = b.dataset.mode; setModeUI(); commit();
+  }));
+
+  // initial values: this module's own record, else the earlier single-page record, else suggested rates
+  let st = null;
+  try { st = JSON.parse(localStorage.getItem(KEY) || 'null'); } catch(e){}
+  st = st || {};
+  Object.keys(SUG).forEach(k => { const v = parseFloat(st[k]); setPair(k, isNaN(v) ? SUG[k] : v); });
+  if (st.mode === 'flat' || st.mode === 'tou') mode = st.mode;
+  setModeUI();
+
+  EM.register('tariff', {
+    get,
+    set(p){
+      Object.keys(PAIRS).forEach(k => { if (k in p && !isNaN(+p[k])) setPair(k, +p[k]); });
+      if (p.mode === 'flat' || p.mode === 'tou'){ mode = p.mode; setModeUI(); }
+      commit();
+    }
+  });
+})();
+</script>
+
+<script>
+(function(){
+  const SUPPLIERS = [
+    {name:'Octopus Energy', tariffs:[
+      {name:'Intelligent Octopus Go', scp:54, off:7.6, peak:36.70, peakRange:'34.95–38.82p by region', sc:'54p/day avg (42–67p)', win:[[23.5,29.5]], winText:'23:30–05:30, plus up to 6 hrs of smart-scheduled slots', contract:'12-month fix, £50 exit fee', req:'Smart meter and a compatible EV or charger'},
+      {name:'Octopus Go', scp:54, off:9.5, peak:35.30, peakRange:'', sc:'54p/day avg', win:[[0.5,5.5]], winText:'00:30–05:30 (5 hrs)', contract:'12-month fix, £50 exit fee', req:'SMETS2 smart meter; a timer on the car or charger'}
+    ]},
+    {name:'EDF', tariffs:[
+      {name:'GoElectric (12 months)', scp:60, off:6.66, peak:35.21, peakRange:'', sc:'60p/day avg', win:[[23,30]], winText:'23:00–06:00 (7 hrs)', contract:'12 months, £75 exit fee per fuel', req:'SMETS2 smart meter'},
+      {name:'GoElectric (18 months)', scp:54, off:6.66, peak:31.99, peakRange:'', sc:'54p/day avg', win:[[23,30]], winText:'23:00–06:00 (7 hrs)', contract:'18 months, £100 exit fee', req:'SMETS2 smart meter'},
+      {name:'Pod Power', scp:60, off:6.18, peak:35.21, peakRange:'', sc:'60p/day avg', win:[[23,30]], winText:'23:00–06:00 (7 hrs)', contract:'Term not stated, £75 exit fee per fuel', req:'Pod Point home charger owners only'},
+      {name:'Pod Point Plug & Power', scp:120, off:6.18, peak:31.99, peakRange:'', sc:'120p/day (charger included)', win:[[23,30]], winText:'23:00–06:00 (7 hrs)', contract:'24 months, £125 exit fee', req:'Includes a Pod Point charger'}
+    ]},
+    {name:'E.ON Next', tariffs:[
+      {name:'Next Drive Smart', scp:57.14, off:8.1, peak:31.68, peakRange:'30.71–33.22p by region', sc:'57.14p/day (all regions)', win:[[24,30]], winText:'00:00–06:00, plus smart-scheduled charging at any time', contract:'1-year fix, no exit fee', req:'Supported EV or charger (zappi, Hypervolt, Indra), one EV per home, half-hourly meter consent'},
+      {name:'Next Drive', off:9.53, peak:32.85, peakRange:'', sc:'Not stated', win:[[24,30]], winText:'00:00–06:00 (set a timer)', contract:'1-year fix, no exit fee', req:'Any EV or plug-in hybrid and any charger'}
+    ]}
+  ];
+  window.__EV_TARIFFS = SUPPLIERS;
+  const $ = id => document.getElementById(id);
+  const esc = s => String(s).replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  const grid = $('evGrid');
+
+  function strip(win){
+    // windows are in hours from 0 to 30 so a window past midnight wraps onto the start of the day
+    const segs = [];
+    win.forEach(([a,b])=>{
+      if (b <= 24) segs.push([a,b]);
+      else { segs.push([a,24]); segs.push([0,b-24]); }
+    });
+    return segs.filter(s=>s[1]>s[0]).map(([a,b])=>`<span class="ev-seg" style="left:${a/24*100}%;width:${(b-a)/24*100}%"></span>`).join('');
+  }
+
+  SUPPLIERS.forEach((sup, si)=>{
+    const col = document.createElement('div');
+    col.className = 'ev-col';
+    col.innerHTML = `
+      <div class="ev-supplier">${esc(sup.name)}</div>
+      <select class="ev-select" id="evSel${si}" aria-label="${esc(sup.name)} EV tariff">
+        ${sup.tariffs.map((t,i)=>`<option value="${i}">${esc(t.name)}</option>`).join('')}
+      </select>
+      <div id="evBody${si}" style="display:flex;flex-direction:column;gap:12px"></div>`;
+    grid.appendChild(col);
+    const sel = $('evSel'+si);
+    if (sup.name==='EDF') sel.value = '1';
+    function render(){
+      const t = sup.tariffs[+sel.value];
+      $('evBody'+si).innerHTML = `
+        <div class="ev-rates">
+          <div class="ev-rate"><span class="ev-rate-label">Off-peak</span><span class="ev-rate-val cheap">${t.off.toFixed(2)}<small> p/kWh</small></span></div>
+          <div class="ev-rate"><span class="ev-rate-label">Peak</span><span class="ev-rate-val">${t.peak.toFixed(2)}<small> p/kWh</small></span></div>
+        </div>
+        <div>
+          <div class="ev-strip" role="img" aria-label="Cheap window: ${esc(t.winText)}">${strip(t.win)}</div>
+          <div class="ev-strip-caption" style="margin-top:4px"><span>00</span><span>06</span><span>12</span><span>18</span><span>24</span></div>
+        </div>
+        <dl class="ev-dl">
+          <dt>Cheap window</dt><dd>${esc(t.winText)}</dd>
+          <dt>Standing charge</dt><dd>${esc(t.sc)}</dd>
+          ${t.peakRange ? `<dt>Peak range</dt><dd>${esc(t.peakRange)}</dd>` : ''}
+          <dt>Contract</dt><dd>${esc(t.contract)}</dd>
+          <dt>Needs</dt><dd>${esc(t.req)}</dd>
+        </dl>
+        <button type="button" class="ev-apply" id="evApply${si}">Use in calculator</button>
+        <div class="ev-applied" id="evApplied${si}" aria-live="polite"></div>`;
+      $('evApply'+si).addEventListener('click', ()=>{
+        const touBtn = document.querySelector('#tariffModeSeg button[data-mode="tou"]');
+        if (touBtn && !touBtn.classList.contains('active')) touBtn.click();
+        [['offpeakNum', t.off], ['peakNum', t.peak]].forEach(([id,v])=>{
+          const inp = $(id); inp.value = v; inp.dispatchEvent(new Event('input', {bubbles:true}));
+        });
+        $('evApplied'+si).textContent = 'Applied: ' + t.off.toFixed(2) + 'p off-peak / ' + t.peak.toFixed(2) + 'p peak';
+      });
+    }
+    sel.addEventListener('change', render);
+    sel.addEventListener('change', mark);
+    render();
+  });
+  function mark(){
+    const T = EM.get('tariff').get();
+    SUPPLIERS.forEach((sup, si)=>{
+      const t = sup.tariffs[+$('evSel'+si).value], n = $('evApplied'+si);
+      if (n && !n.dataset.flash) n.textContent = (T.mode==='tou' && Math.abs(T.offpeak-t.off)<0.005 && Math.abs(T.peak-t.peak)<0.005) ? 'In use in the calculator' : '';
+    });
+  }
+  EM.on(n=>{ if (n==='tariff' || n==='init') mark(); });
+})();
+</script>
+
+<script>
+(function(){
+  const S = [
+    {name:'Octopus Energy', tariffs:[
+      {name:'Outgoing Octopus', rate:12, label:'12.00', note:'Flat. Cut from 15p on 1 March 2026.', cond:'Customers only: needs an Octopus import tariff, smart meter and a renewable system. Battery optional.', term:'Fixed rate'},
+      {name:'Octopus SEG', rate:4.1, label:'4.10', note:'Flat. Unchanged since February 2022.', cond:'Open to anyone: you can import from another supplier. Needs a smart meter and an MCS or Flexi-Orb certified system.', term:'Flat rate'},
+      {name:'Outgoing Agile', rate:9.4, label:'9.4 avg', note:'Changes every half hour: averaged 9.4p over Apr 2025 to Mar 2026, range 0 to 30.41p.', cond:'Customers only: needs an Octopus import tariff and smart meter. A battery is recommended.', term:'Half-hourly variable', avg:true},
+      {name:'Octopus Flux', rate:null, label:'4.99 / 10.11 / 29.32', note:'Off-peak (02:00–05:00) 4.99p, peak (16:00–19:00) 29.32p, 10.11p at other times.', cond:'Needs Flux import as well, plus solar, a battery and a smart meter.', term:'Time of use'},
+      {name:'Intelligent Octopus Flux', rate:null, label:'24.13 / 32.17', note:'Peak (16:00–19:00) 32.17p, 24.13p at other times. Import rates match.', cond:'Needs solar and a battery from an eligible manufacturer, plus a smart meter.', term:'Time of use'}
+    ]},
+    {name:'EDF', tariffs:[
+      {name:'Export Exclusive 12m', rate:18, label:'18.00', note:'Flat, 12 months, no exit fees. For sales after 2 March 2026.', cond:'Solar, battery or both from EDF; battery-only needs an MCS or Flexi-Orb certificate. Optional EDF import tariff.', term:'12-month fix'},
+      {name:'Export 12m', rate:13, label:'13.00', note:'Flat, 12 months, no exit fees.', cond:'Existing EDF electricity customers only. Solar PV, up to 50kW.', term:'12-month fix'},
+      {name:'SEG Export Variable Value', rate:5.6, label:'5.60', note:'Variable rate, no exit fees.', cond:'EDF electricity customers only.', term:'Variable'},
+      {name:'SEG Export Variable', rate:3, label:'3.00', note:'Variable rate, no exit fees.', cond:'Open to anyone, including customers of other suppliers.', term:'Variable'}
+    ]},
+    {name:'E.ON Next', tariffs:[
+      {name:'Next Export Premium', rate:17.5, label:'17.50', note:'Flat, 12 months.', cond:'Solar and/or battery installed through E.ON, up to 15kWp, and your grid electricity from E.ON.', term:'12-month fix'},
+      {name:'Next Export Exclusive', rate:13, label:'13.00', note:'Flat, 12 months. Cut from 16.5p in November 2025.', cond:'Your grid electricity from E.ON, system up to 15kWp. Pays annually unless you ask for quarterly.', term:'12-month fix'},
+      {name:'Next Flex Export (SEG)', rate:6, label:'6.00', note:'Variable rate on a 12-month term. Up from 3p.', cond:'Open to anyone: no need to use E.ON for anything else. MCS or Flexi-Orb certified system.', term:'Variable'}
+    ]}
+  ];
+  const $ = id => document.getElementById(id);
+  const esc = s => String(s).replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  const grid = $('expGrid');
+  S.forEach((sup, si)=>{
+    const col = document.createElement('div'); col.className = 'ev-col';
+    col.innerHTML = `<div class="ev-supplier">${esc(sup.name)}</div>
+      <select class="ev-select" id="expSel${si}" aria-label="${esc(sup.name)} export tariff">${sup.tariffs.map((t,i)=>`<option value="${i}">${esc(t.name)}</option>`).join('')}</select>
+      <div id="expBody${si}" style="display:flex;flex-direction:column;gap:12px"></div>`;
+    grid.appendChild(col);
+    const sel = $('expSel'+si);
+    if (sup.name==='EDF') sel.value = '1';
+    function render(){
+      const t = sup.tariffs[+sel.value];
+      const canApply = t.rate !== null;
+      $('expBody'+si).innerHTML = `
+        <div class="ev-rates"><div class="ev-rate"><span class="ev-rate-label">Export rate</span><span class="ev-rate-val cheap" style="${t.rate===null?'font-size:1.05rem':''}">${esc(t.label)}<small> p/kWh</small></span></div></div>
+        <dl class="ev-dl">
+          <dt>Type</dt><dd>${esc(t.term)}</dd>
+          <dt>Detail</dt><dd>${esc(t.note)}</dd>
+          <dt>Needs</dt><dd>${esc(t.cond)}</dd>
+        </dl>
+        <button type="button" class="ev-apply" id="expApply${si}" ${canApply?'':'disabled style="opacity:.45;cursor:not-allowed"'}>${canApply ? (t.avg ? 'Use average in calculator' : 'Use as export rate') : 'Time of use: not modelled'}</button>
+        <div class="ev-applied" id="expApplied${si}" aria-live="polite"></div>`;
+      if (canApply) $('expApply'+si).addEventListener('click', ()=>{
+        const inp = $('exportNum'); inp.value = t.rate; inp.dispatchEvent(new Event('input', {bubbles:true}));
+        $('expApplied'+si).textContent = 'Export rate set to ' + t.rate.toFixed(2) + 'p';
+      });
+    }
+    sel.addEventListener('change', render); sel.addEventListener('change', mark); render();
+  });
+  function mark(){
+    const T = EM.get('tariff').get();
+    S.forEach((sup, si)=>{
+      const t = sup.tariffs[+$('expSel'+si).value], n = $('expApplied'+si);
+      if (n) n.textContent = (t.rate!==null && Math.abs(T.exportRate-t.rate)<0.005) ? 'In use in the calculator' : '';
+    });
+  }
+  EM.on(n=>{ if (n==='tariff' || n==='init') mark(); });
+})();
+</script>
+
+<script>
+(function(){
+  const $ = id => document.getElementById(id);
+  const KEY = 'solarBatteryMeter.car.v3';
+  let period = 'year'; let when = 'night'; let include = false;
+  const def = {mpk:4, miles:15000, period:'year', when:'night', mpg:45, fuel:'petrol', price:1.759, tax:3, taxOn:true};
+  const FUEL_SUGG = {petrol:1.759, diesel:1.999}, MPG_SUGG = {petrol:45, diesel:60};
+  let fuel = 'petrol';
+  let st = Object.assign({}, def);
+  try { const r = JSON.parse(localStorage.getItem(KEY)||'null'); if (r && typeof r==='object') st = Object.assign(st, r); } catch(e){}
+  if (st.period==='week' || st.period==='year') period = st.period;
+  if (st.when==='night' || st.when==='day') when = st.when;
+  include = st.include === true;
+  if (st.fuel==='petrol' || st.fuel==='diesel') fuel = st.fuel;
+  let taxOn = st.taxOn !== false;
+
+  function milesPerYear(){ const m = parseFloat($('carMilesNum').value)||0; return period==='week' ? m*52 : m; }
+  function money(v){ return '£' + Math.round(v).toLocaleString('en-GB'); }
+  let last = null;
+  const DRIVERS = {
+    '1': {miles:15000, mpg:45, price:1.759, fuel:'petrol', note:'15,000 mi a year, 45 mpg petrol at £1.759 a litre.'},
+    '2': {miles:9000, mpg:55, price:1.999, fuel:'diesel', note:'9,000 mi a year, 55 mpg diesel at £1.999 a litre.'}
+  };
+  function markDriver(){
+    const m = milesPerYear(), g = parseFloat($('carMpgNum').value)||0, p = parseFloat($('carFuelNum').value)||0;
+    let hit = null;
+    Object.keys(DRIVERS).forEach(k=>{ const d = DRIVERS[k]; if (Math.abs(d.miles-m)<0.5 && Math.abs(d.mpg-g)<0.01 && Math.abs(d.price-p)<0.0005 && d.fuel===fuel) hit = k; });
+    document.querySelectorAll('#carDriverSeg button').forEach(x=>x.classList.toggle('active', x.dataset.driver===hit));
+    $('carDriverNote').textContent = hit ? DRIVERS[hit].note : 'Custom values. Pick a driver to load a preset. Efficiency (mi/kWh) is not part of the presets.';
+  }
+  function activeTariff(){ const T = EM.get('tariff').get(); return {tou:T.mode==='tou', imp:T.importRate, off:T.offpeak, pk:T.peak}; }
+  function save(){
+    try { localStorage.setItem(KEY, JSON.stringify({mpk:parseFloat($('carMpkNum').value)||0, miles:parseFloat($('carMilesNum').value)||0, period, when, include, mpg:parseFloat($('carMpgNum').value)||0, price:parseFloat($('carFuelNum').value)||0, fuel, tax:parseFloat($('carTaxNum').value)||0, taxOn})); } catch(e){}
+  }
+  function setPeriodUI(){
+    document.querySelectorAll('#carPeriodSeg button').forEach(b=>b.classList.toggle('active', b.dataset.period===period));
+    $('carPeriodLbl').textContent = period;
+    const sl = $('carMilesSlider'), n = $('carMilesNum');
+    sl.max = period==='week' ? 600 : 30000; sl.step = period==='week' ? 5 : 100;
+    n.step = sl.step; n.max = period==='week' ? 4000 : 200000;
+  }
+  function render(){
+    const mpk = parseFloat($('carMpkNum').value)||0;
+    const miles = milesPerYear();
+    $('carMpkVal').textContent = mpk.toFixed(1);
+    $('carMilesVal').textContent = (parseFloat($('carMilesNum').value)||0).toLocaleString('en-GB');
+    const kwh = mpk>0 ? miles/mpk : 0;
+    $('carKwhYr').textContent = Math.round(kwh).toLocaleString('en-GB') + ' kWh';
+    $('carKwhSub').textContent = (kwh/52).toFixed(1) + ' kWh/week · ' + Math.round(miles).toLocaleString('en-GB') + ' mi/yr';
+    const t = activeTariff();
+    const rate = t.tou ? (when==='night' ? t.off : t.pk) : t.imp;
+    const charge = kwh*rate/100;
+    const taxRate = parseFloat($('carTaxNum').value)||0;
+    const taxCost = taxOn ? miles*taxRate/100 : 0;
+    const cost = charge + taxCost;
+    $('carTaxVal').textContent = taxRate.toFixed(1);
+    $('carCost').textContent = '−' + money(cost);
+    $('carCostSub').textContent = money(charge) + ' charging' + (taxOn ? ' + ' + money(taxCost) + ' mileage tax' : '') + (t.tou ? (when==='night' ? ', night rate' : ', day rate') : ', flat rate');
+    document.querySelectorAll('#carWhenSeg button').forEach(b=>{ b.classList.toggle('active', b.dataset.when===when); b.disabled = !t.tou; b.style.opacity = t.tou ? '' : '.5'; });
+    $('carWhenNote').textContent = t.tou ? (when==='night' ? 'Cheap window, 23:30–05:30 in the calculator.' : 'Outside the cheap window, at the peak rate.') : 'Flat rate: the price is the same at any time. Switch the Tariffs tab to Two-rate to choose.';
+    $('carPerMile').textContent = (miles>0 ? cost/miles*100 : 0).toFixed(1) + 'p';
+    $('carPerMileSub').textContent = 'per mile';
+    const mpg = parseFloat($('carMpgNum').value)||0, price = parseFloat($('carFuelNum').value)||0;
+    $('carMpgVal').textContent = Math.round(mpg);
+    $('carFuelVal').textContent = price.toFixed(3);
+    document.querySelectorAll('#carFuelSeg button').forEach(b=>b.classList.toggle('active', b.dataset.fuel===fuel));
+    const litres = mpg>0 ? miles/mpg*4.54609 : 0;
+    const fuelCost = litres*price;
+    $('carFuelCost').textContent = '−' + money(fuelCost);
+    $('carFuelSub').textContent = Math.round(litres).toLocaleString('en-GB') + ' litres/yr of ' + fuel;
+    $('carFuelPm').textContent = (miles>0 ? fuelCost/miles*100 : 0).toFixed(1) + 'p';
+    $('carFuelPmSub').textContent = 'per mile, vs ' + (miles>0 ? cost/miles*100 : 0).toFixed(1) + 'p electric';
+    const save = fuelCost - cost;
+    const sv = $('carSave');
+    sv.textContent = (save>=0 ? '' : '−') + money(Math.abs(save));
+    sv.className = 'tile-value ' + (save>=0 ? 'positive' : 'negative');
+    $('carSaveSub').textContent = save>=0 ? (fuelCost>0 ? Math.round(save/fuelCost*100) + '% cheaper per year' : 'per year') : 'electric costs more per year';
+    last = {kwh, miles, charge, taxCost, cost, rate, when, tou:t.tou, taxOn, litres, fuelCost, save};
+    markDriver();
+    $('carAsof').textContent = t.tou ? (when==='night' ? 'Costed on your Two-rate night rate' : 'Costed on your Two-rate day rate') : 'Costed on your flat import rate';
+    const rows = t.tou
+      ? [['Charged at off-peak ('+t.off.toFixed(2)+'p)', kwh*t.off/100], ['Charged at peak ('+t.pk.toFixed(2)+'p)', kwh*t.pk/100], ['At your flat rate ('+t.imp.toFixed(2)+'p)', kwh*t.imp/100]]
+      : [['At your flat rate ('+t.imp.toFixed(2)+'p)', kwh*t.imp/100], ['At two-rate off-peak ('+t.off.toFixed(2)+'p)', kwh*t.off/100], ['At two-rate peak ('+t.pk.toFixed(2)+'p)', kwh*t.pk/100]];
+    $('carCmpBody').innerHTML = rows.map(r=>'<tr><td>'+r[0]+'</td><td>'+money(r[1])+' /yr</td></tr>').join('') + '<tr><td>EV mileage tax ('+taxRate.toFixed(1)+'p/mile)'+(taxOn?'':' — off')+'</td><td>'+(taxOn?money(taxCost):'£0')+' /yr</td></tr>';
+    EM.changed('carview');
+  }
+
+  function pushToMain(){ EM.changed('car'); }
+  const incEl = $('carInclude'); incEl.checked = include;
+  incEl.addEventListener('change', ()=>{ include = incEl.checked; save(); render(); pushToMain(); });
+  const mpkS=$('carMpkSlider'), mpkN=$('carMpkNum'), miS=$('carMilesSlider'), miN=$('carMilesNum');
+  mpkS.value = mpkN.value = st.mpk;
+  miS.value = miN.value = st.miles;
+  const mgS=$('carMpgSlider'), mgN=$('carMpgNum'), fpS=$('carFuelSlider'), fpN=$('carFuelNum');
+  const txS=$('carTaxSlider'), txN=$('carTaxNum'), txC=$('carTaxOn');
+  txS.value = txN.value = st.tax; txC.checked = taxOn;
+  txS.addEventListener('input', ()=>{ txN.value = txS.value; render(); save(); });
+  txN.addEventListener('input', ()=>{ const v=parseFloat(txN.value); if(!isNaN(v)) txS.value=v; render(); save(); });
+  txC.addEventListener('change', ()=>{ taxOn = txC.checked; render(); save(); });
+  mgS.value = mgN.value = st.mpg; fpS.value = fpN.value = st.price;
+  mgS.addEventListener('input', ()=>{ mgN.value = mgS.value; render(); save(); });
+  mgN.addEventListener('input', ()=>{ const v=parseFloat(mgN.value); if(!isNaN(v)) mgS.value=v; render(); save(); });
+  fpS.addEventListener('input', ()=>{ fpN.value = fpS.value; render(); save(); });
+  fpN.addEventListener('input', ()=>{ const v=parseFloat(fpN.value); if(!isNaN(v)) fpS.value=v; render(); save(); });
+  document.querySelectorAll('#carFuelSeg button').forEach(b=>b.addEventListener('click', ()=>{ fuel = b.dataset.fuel; fpN.value = fpS.value = FUEL_SUGG[fuel]; mgN.value = mgS.value = MPG_SUGG[fuel]; render(); save(); }));
+  setPeriodUI();
+  mpkS.addEventListener('input', ()=>{ mpkN.value = mpkS.value; render(); save(); pushToMain(); });
+  mpkN.addEventListener('input', ()=>{ const v=parseFloat(mpkN.value); if(!isNaN(v)){ mpkS.value=v; } render(); save(); pushToMain(); });
+  miS.addEventListener('input', ()=>{ miN.value = miS.value; render(); save(); pushToMain(); });
+  miN.addEventListener('input', ()=>{ const v=parseFloat(miN.value); if(!isNaN(v)){ miS.value=v; } render(); save(); pushToMain(); });
+  document.querySelectorAll('#carPeriodSeg button').forEach(b=>b.addEventListener('click', ()=>{
+    if (b.dataset.period===period) return;
+    const cur = parseFloat(miN.value)||0;
+    const conv = b.dataset.period==='week' ? Math.round(cur/52/5)*5 : Math.round(cur*52/100)*100;
+    period = b.dataset.period; setPeriodUI();
+    miN.value = conv; miS.value = conv; render(); save(); pushToMain();
+  }));
+  document.querySelectorAll('#carWhenSeg button').forEach(b=>b.addEventListener('click', ()=>{ when = b.dataset.when; render(); save(); pushToMain(); }));
+  document.querySelectorAll('#carDriverSeg button').forEach(b=>b.addEventListener('click', ()=>{
+    const d = DRIVERS[b.dataset.driver]; period = 'year'; setPeriodUI();
+    miN.value = miS.value = d.miles; mgN.value = mgS.value = d.mpg; fpN.value = fpS.value = d.price; fuel = d.fuel;
+    render(); save(); pushToMain();
+  }));
+  EM.on(n=>{ if (n==='tariff') render(); });
+  EM.register('car', {
+    get(){
+      const mpk = parseFloat(mpkN.value)||0;
+      return {on:include, include, kwh: mpk>0 ? milesPerYear()/mpk : 0, when, mpk, milesYear:milesPerYear(),
+              mpg:parseFloat(mgN.value)||0, price:parseFloat(fpN.value)||0, fuel, tax:parseFloat(txN.value)||0, taxOn};
+    },
+    set(p){
+      if ('mpk' in p && !isNaN(+p.mpk)) mpkN.value = mpkS.value = p.mpk;
+      if ('milesYear' in p && !isNaN(+p.milesYear)){ const v = period==='week' ? +(p.milesYear/52).toFixed(1) : p.milesYear; miN.value = miS.value = v; }
+      if ('mpg' in p && !isNaN(+p.mpg)) mgN.value = mgS.value = p.mpg;
+      if ('price' in p && !isNaN(+p.price)) fpN.value = fpS.value = p.price;
+      if ('tax' in p && !isNaN(+p.tax)) txN.value = txS.value = p.tax;
+      if (p.when === 'night' || p.when === 'day') when = p.when;
+      if ('include' in p){ include = !!p.include; incEl.checked = include; }
+      render(); save(); pushToMain();
+    },
+    results(){ return last; }
+  });
+  render();
+})();
+</script>
+
+<script>
+(function(){
+  const $ = id => document.getElementById(id);
+  const money = v => '£' + Math.round(Math.abs(v)).toLocaleString('en-GB');
+  function refresh(){
+    const T = EM.get('tariff').get(), ca = EM.get('car').results();
+    if (!ca) return;
+    $('tfCar').textContent = '−' + money(ca.charge);
+    $('tfCarSub').textContent = Math.round(ca.kwh).toLocaleString('en-GB') + ' kWh/yr at ' + ca.rate.toFixed(2) + 'p';
+    $('tfRate').textContent = ca.rate.toFixed(2) + 'p';
+    $('tfRateSub').textContent = T.mode === 'tou' ? (ca.when === 'night' ? 'off-peak, for night charging' : 'peak, for day charging') : 'flat import, any time of day';
+    const flat = ca.kwh * T.importRate / 100, d = flat - ca.charge, el = $('tfSave');
+    el.textContent = (d >= 0 ? '' : '−') + money(d);
+    el.className = 'tile-value ' + (d >= 0 ? 'positive' : 'negative');
+    $('tfSaveSub').textContent = T.mode === 'tou' ? (d >= 0 ? 'a year cheaper than ' + T.importRate.toFixed(2) + 'p flat' : 'a year dearer than ' + T.importRate.toFixed(2) + 'p flat') : 'flat rate is the baseline';
+  }
+  EM.on(refresh);
+  EM.changed('init');
+})();
+</script>
+
+</body>
+</html>
